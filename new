@@ -3620,323 +3620,437 @@ This website is independently operated and not the official website of Cornersto
 
 
   <!-- JAVASCRIPT -->
-  <script>
-    // Contact form submission
-    const inquiryForm = document.getElementById('propertyInquiry');
-    if(inquiryForm) {
-      inquiryForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const submitBtn = e.target.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Submitting...';
+<script>
+(function() {
+  'use strict';
 
-        const formData = new FormData(inquiryForm);
+  // Cache DOM elements
+  const elements = {
+    inquiryForm: document.getElementById('propertyInquiry'),
+    phoneInput: document.getElementById('phone'),
+    floatingCTA: document.querySelector('.floating-cta'),
+    mobileToggle: document.querySelector('.mobile-menu-toggle'),
+    termsToggle: document.getElementById('terms-toggle'),
+    termsDropdown: document.getElementById('terms-dropdown')
+  };
 
-        try {
-          let response = await fetch('/', {
-            method: 'POST',
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams(formData).toString()
-          });
+  // Utility functions
+  const utils = {
+    // Debounce function for performance
+    debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    },
 
-          if (response.ok) {
-            inquiryForm.innerHTML = `
-              <div style="text-align:center; padding:2rem;">
-                <h3 style="color: var(--teal); margin-bottom:1rem;">✓ Thank You!</h3>
-                <p style="margin-bottom:1.5rem;">We've received your inquiry and will contact you within 24 hours.</p>
-                <p style="font-size:1.2rem; font-weight:700; margin-bottom:1rem;">Want to speak now?</p>
-                <a href="tel:+15617186725" class="submit-button" style="display:inline-block; padding:1rem 2rem;">
-                  📞 Call (561) 718-6725
-                </a>
-              </div>
-            `;
-          } else {
-            alert('Submission failed. Please call (561) 718-6725 directly.');
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'GET PROPERTY LIST & SCHEDULE TOUR →';
-          }
-        } catch (err) {
-          alert('Could not submit form. Please call (561) 718-6725 directly.');
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'GET PROPERTY LIST & SCHEDULE TOUR →';
+    // Throttle function for scroll events
+    throttle(func, limit) {
+      let inThrottle;
+      return function(...args) {
+        if (!inThrottle) {
+          func.apply(this, args);
+          inThrottle = true;
+          setTimeout(() => inThrottle = false, limit);
+        }
+      };
+    },
+
+    // Format phone number
+    formatPhoneNumber(value) {
+      const digits = value.replace(/\D/g, '');
+      if (digits.length === 0) return '';
+      if (digits.length <= 3) return `(${digits}`;
+      if (digits.length <= 6) return `(${digits.slice(0,3)}) ${digits.slice(3)}`;
+      return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6,10)}`;
+    }
+  };
+
+  // Form handlers
+  const formHandlers = {
+    // Handle main inquiry form
+    async handleInquirySubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Submitting...';
+
+      try {
+        const response = await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams(new FormData(form)).toString()
+        });
+
+        if (response.ok) {
+          form.innerHTML = `
+            <div style="text-align:center; padding:2rem;">
+              <h3 style="color: var(--teal); margin-bottom:1rem;">✓ Thank You!</h3>
+              <p style="margin-bottom:1.5rem;">We've received your inquiry and will contact you within 24 hours.</p>
+              <p style="font-size:1.2rem; font-weight:700; margin-bottom:1rem;">Want to speak now?</p>
+              <a href="tel:+15617186725" class="submit-button" style="display:inline-block; padding:1rem 2rem;">
+                📞 Call (561) 718-6725
+              </a>
+            </div>
+          `;
+        } else {
+          throw new Error('Submission failed');
+        }
+      } catch (err) {
+        console.error('Form submission error:', err);
+        alert('Unable to submit form. Please call (561) 718-6725 directly.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    },
+
+    // Handle newsletter forms
+    async handleNewsletterSubmit(e) {
+      e.preventDefault();
+      const form = e.target;
+      const submitBtn = form.querySelector('button[type="submit"]');
+      const originalText = submitBtn.textContent;
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Subscribing...';
+
+      try {
+        const response = await fetch('/', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+          body: new URLSearchParams(new FormData(form)).toString()
+        });
+
+        if (response.ok) {
+          form.innerHTML = `
+            <div style="text-align:center; padding:1.5rem 0;">
+              <strong style="color: var(--teal); font-size:1.2rem;">Thank you for subscribing!</strong><br>
+              Market insights will be delivered to your inbox.
+            </div>
+          `;
+        } else {
+          throw new Error('Subscription failed');
+        }
+      } catch (err) {
+        console.error('Newsletter submission error:', err);
+        alert('Unable to subscribe. Please try again or call (561) 718-6725.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = originalText;
+      }
+    }
+  };
+
+  // Mobile menu implementation
+  class MobileMenu {
+    constructor() {
+      this.createMenu();
+      this.bindEvents();
+    }
+
+    createMenu() {
+      const menuHTML = `
+        <div class="mobile-menu-content">
+          <button class="mobile-menu-close" aria-label="Close menu">✕</button>
+          <nav class="mobile-menu-links">
+            <a href="#properties">Properties</a>
+            <a href="#about">About</a>
+            <a href="#faq">FAQ</a>
+            <a href="tel:+15617186725" class="mobile-menu-phone">📞 Call 561-718-6725</a>
+            <a href="#hero-form" class="mobile-menu-cta">Get Available Properties</a>
+          </nav>
+        </div>
+      `;
+      
+      this.menu = document.createElement('div');
+      this.menu.className = 'mobile-menu';
+      this.menu.innerHTML = menuHTML;
+      document.body.appendChild(this.menu);
+    }
+
+    bindEvents() {
+      // Open menu
+      if (elements.mobileToggle) {
+        elements.mobileToggle.addEventListener('click', () => this.open());
+      }
+
+      // Close menu
+      const closeBtn = this.menu.querySelector('.mobile-menu-close');
+      closeBtn.addEventListener('click', () => this.close());
+
+      // Close on link click
+      this.menu.querySelectorAll('a').forEach(link => {
+        link.addEventListener('click', () => this.close());
+      });
+
+      // Close on outside click
+      this.menu.addEventListener('click', (e) => {
+        if (e.target === this.menu) this.close();
+      });
+    }
+
+    open() {
+      this.menu.classList.add('active');
+      document.body.style.overflow = 'hidden';
+    }
+
+    close() {
+      this.menu.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+  }
+
+  // Scroll animations with Intersection Observer
+  class ScrollAnimations {
+    constructor() {
+      this.options = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+      };
+      this.observer = new IntersectionObserver(this.handleIntersection.bind(this), this.options);
+      this.observeElements();
+    }
+
+    handleIntersection(entries) {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.style.opacity = '1';
+          entry.target.style.transform = 'translateY(0)';
+          this.observer.unobserve(entry.target); // Stop observing once animated
         }
       });
     }
 
-    // Newsletter form submission
-    document.querySelectorAll('.newsletter-form').forEach(form => {
-      form.addEventListener('submit', async function(e) {
-        e.preventDefault();
-        const submitBtn = form.querySelector('button[type="submit"]');
-        submitBtn.disabled = true;
-        submitBtn.textContent = 'Subscribing...';
-        const formData = new FormData(form);
-
-        try {
-          let response = await fetch('/', {
-            method: 'POST',
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams(formData).toString()
-          });
-
-          if (response.ok) {
-            form.innerHTML = `<div style="text-align:center; padding:1.5rem 0;">
-              <strong style="color: var(--teal); font-size:1.2rem;">Thank you for subscribing!</strong><br>
-              Market insights will be delivered to your inbox.
-            </div>`;
-          } else {
-            submitBtn.disabled = false;
-            submitBtn.textContent = 'Subscribe';
-            alert('Could not subscribe. Please try again or call (561) 718-6725.');
-          }
-        } catch (err) {
-          submitBtn.disabled = false;
-          submitBtn.textContent = 'Subscribe';
-          alert('Could not subscribe. Please try again or call (561) 718-6725.');
-        }
+    observeElements() {
+      const selectors = ['.property-card', '.benefit-card'];
+      selectors.forEach(selector => {
+        document.querySelectorAll(selector).forEach((el, index) => {
+          el.style.opacity = '0';
+          el.style.transform = 'translateY(20px)';
+          el.style.transition = `all 0.5s ease ${index * 0.1}s`;
+          this.observer.observe(el);
+        });
       });
+    }
+  }
+
+  // Initialize components
+  function init() {
+    // Form submissions
+    if (elements.inquiryForm) {
+      elements.inquiryForm.addEventListener('submit', formHandlers.handleInquirySubmit);
+    }
+
+    // Newsletter forms
+    document.querySelectorAll('.newsletter-form').forEach(form => {
+      form.addEventListener('submit', formHandlers.handleNewsletterSubmit);
     });
 
     // Phone number formatting
-    const phoneInput = document.getElementById('phone');
-    if(phoneInput) {
-      phoneInput.addEventListener('input', (e) => {
-        let value = e.target.value.replace(/\D/g, '');
-        let formatted = '';
-        if(value.length > 0) {
-          formatted = '(' + value.substring(0,3);
-        }
-        if(value.length >= 4) {
-          formatted += ') ' + value.substring(3,6);
-        }
-        if(value.length >= 7) {
-          formatted += '-' + value.substring(6,10);
-        }
-        e.target.value = formatted;
+    if (elements.phoneInput) {
+      elements.phoneInput.addEventListener('input', (e) => {
+        e.target.value = utils.formatPhoneNumber(e.target.value);
       });
     }
 
-    // Smooth scroll for internal anchor links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', (e) => {
-        const href = anchor.getAttribute('href');
-        if (href === '#' || href.startsWith('#blog-')) return;
-
-        const targetID = href.replace('#','');
-        const targetElem = document.getElementById(targetID);
-        if(targetElem) {
-          e.preventDefault();
-          targetElem.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }
-      });
+    // Smooth scrolling - using event delegation
+    document.addEventListener('click', (e) => {
+      const link = e.target.closest('a[href^="#"]');
+      if (!link) return;
+      
+      const href = link.getAttribute('href');
+      if (href === '#' || href.startsWith('#blog-')) return;
+      
+      const target = document.querySelector(href);
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
     });
 
-    // Floating CTA - always visible
-const floatCTA = document.querySelector('.floating-cta');
-window.addEventListener('scroll', () => {
-  // Keep the button visible at all times
-  if (floatCTA) {
-    floatCTA.style.transform = 'translateY(0)';
-  }
-});
+    // Keep floating CTA visible
+    if (elements.floatingCTA) {
+      // Add pulse animation
+      elements.floatingCTA.style.animation = 'subtlePulse 3s infinite';
+    }
 
-    // FAQ Accordion
-    const faqItems = document.querySelectorAll('.faq-item');
-    faqItems.forEach(item => {
-      const question = item.querySelector('.faq-question');
-      const answer = item.querySelector('.faq-answer');
-      const icon = item.querySelector('.faq-icon');
-      question.addEventListener('click', () => {
+    // FAQ Accordion - using event delegation
+    const faqContainer = document.querySelector('.faq-container');
+    if (faqContainer) {
+      faqContainer.addEventListener('click', (e) => {
+        const question = e.target.closest('.faq-question');
+        if (!question) return;
+
+        const item = question.parentElement;
+        const answer = item.querySelector('.faq-answer');
+        const icon = item.querySelector('.faq-icon');
         const isOpen = answer.style.display === 'block';
 
         // Close all
-        faqItems.forEach(faq => {
-          faq.querySelector('.faq-answer').style.display = 'none';
-          faq.querySelector('.faq-icon').style.transform = 'rotate(0deg)';
+        faqContainer.querySelectorAll('.faq-answer').forEach(a => {
+          a.style.display = 'none';
+        });
+        faqContainer.querySelectorAll('.faq-icon').forEach(i => {
+          i.style.transform = 'rotate(0deg)';
         });
 
-        // Toggle
-        if(!isOpen) {
+        // Toggle current
+        if (!isOpen) {
           answer.style.display = 'block';
           icon.style.transform = 'rotate(180deg)';
         }
       });
-    });
+    }
 
-    // Blog toggle
-    document.querySelectorAll('.blog-card').forEach(card => {
-      const link = card.querySelector('.blog-link');
-      const closeBtn = card.querySelector('.blog-close');
-      const title = card.querySelector('h3');
-
-      [link, title].forEach(element => {
-        if (element) {
-          element.addEventListener('click', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            document.querySelectorAll('.blog-card.expanded').forEach(otherCard => {
-              if (otherCard !== card) {
-                otherCard.classList.remove('expanded');
-              }
+    // Blog cards - using event delegation
+    const blogGrid = document.querySelector('.blog-grid');
+    if (blogGrid) {
+      blogGrid.addEventListener('click', (e) => {
+        const link = e.target.closest('.blog-link, h3');
+        const closeBtn = e.target.closest('.blog-close');
+        
+        if (link) {
+          e.preventDefault();
+          const card = link.closest('.blog-card');
+          if (card) {
+            // Close other expanded cards
+            blogGrid.querySelectorAll('.blog-card.expanded').forEach(c => {
+              if (c !== card) c.classList.remove('expanded');
             });
+            
             card.classList.toggle('expanded');
             if (card.classList.contains('expanded')) {
               setTimeout(() => {
                 card.scrollIntoView({ behavior: 'smooth', block: 'start' });
               }, 100);
             }
-          });
-        }
-      });
-
-      if (closeBtn) {
-        closeBtn.addEventListener('click', (e) => {
-          e.stopPropagation();
-          card.classList.remove('expanded');
-        });
-      }
-    });
-
-    // Mobile menu toggle
-    const mobileToggle = document.querySelector('.mobile-menu-toggle');
-    const mobileMenu = document.createElement('div');
-    mobileMenu.className = 'mobile-menu';
-    mobileMenu.innerHTML = `
-      <div class="mobile-menu-content">
-        <button class="mobile-menu-close">✕</button>
-        <div class="mobile-menu-links">
-          <a href="#properties">Properties</a>
-          <a href="#about">About</a>
-          <a href="#faq">FAQ</a>
-          <a href="tel:+15617186725" class="mobile-menu-phone">📞 Call 561-718-6725</a>
-          <a href="#propertyForm" class="mobile-menu-cta">Get Available Properties</a>
-        </div>
-      </div>
-    `;
-    document.body.appendChild(mobileMenu);
-    
-    if(mobileToggle) {
-      mobileToggle.addEventListener('click', () => {
-        mobileMenu.classList.add('active');
-        document.body.style.overflow = 'hidden';
-      });
-    }
-    
-    const mobileMenuClose = mobileMenu.querySelector('.mobile-menu-close');
-    mobileMenuClose.addEventListener('click', () => {
-      mobileMenu.classList.remove('active');
-      document.body.style.overflow = '';
-    });
-    
-    // Close mobile menu when clicking links
-    mobileMenu.querySelectorAll('a').forEach(link => {
-      link.addEventListener('click', () => {
-        mobileMenu.classList.remove('active');
-        document.body.style.overflow = '';
-      });
-    });
-
-    // Animate on scroll
-    const observerOptions = {
-      threshold: 0.1,
-      rootMargin: '0px 0px -50px 0px'
-    };
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          entry.target.style.opacity = '1';
-          entry.target.style.transform = 'translateY(0)';
-        }
-      });
-    }, observerOptions);
-
-    // Observe property/benefit cards
-    document.querySelectorAll('.property-card').forEach((card, index) => {
-      card.style.opacity = '0';
-      card.style.transform = 'translateY(20px)';
-      card.style.transition = `all 0.5s ease ${index * 0.1}s`;
-      observer.observe(card);
-    });
-    document.querySelectorAll('.benefit-card').forEach((card, index) => {
-      card.style.opacity = '0';
-      card.style.transform = 'translateY(20px)';
-      card.style.transition = `all 0.5s ease ${index * 0.1}s`;
-      observer.observe(card);
-    });
-
-    // Ripple effect
-    document.querySelectorAll('.property-button, .nav-button').forEach(button => {
-      button.addEventListener('click', function(e) {
-        const ripple = document.createElement('span');
-        const rect = this.getBoundingClientRect();
-        const size = Math.max(rect.width, rect.height);
-        const x = e.clientX - rect.left - size / 2;
-        const y = e.clientY - rect.top - size / 2;
-
-        ripple.style.width = ripple.style.height = size + 'px';
-        ripple.style.left = x + 'px';
-        ripple.style.top = y + 'px';
-        ripple.classList.add('ripple');
-        this.appendChild(ripple);
-        setTimeout(() => ripple.remove(), 600);
-      });
-    });
-
-    // Performance
-    window.addEventListener('load', () => {
-      if ('performance' in window) {
-        const perfData = window.performance.timing;
-        const pageLoadTime = perfData.loadEventEnd - perfData.navigationStart;
-        console.log('Page load time:', pageLoadTime + 'ms');
-      }
-    });
-
-    // Availability hover/click
-    function initializeAvailabilityFeatures() {
-      document.querySelectorAll('.availability-badge').forEach(badge => {
-        const originalText = badge.textContent;
-        badge.addEventListener('mouseenter', () => {
-          badge.style.transform = 'scale(1.05)';
-          badge.style.cursor = 'pointer';
-          if (badge.classList.contains('urgent')) {
-            badge.textContent = 'Call to Secure';
           }
-        });
-        badge.addEventListener('mouseleave', () => {
-          badge.style.transform = 'scale(1)';
-          badge.textContent = originalText;
-        });
-        badge.addEventListener('click', () => {
-          window.location.href = 'tel:+15617186725';
-        });
+        } else if (closeBtn) {
+          const card = closeBtn.closest('.blog-card');
+          if (card) card.classList.remove('expanded');
+        }
       });
     }
-    initializeAvailabilityFeatures();
 
-    // Terms & Privacy dropdown toggle
-    const termsToggle = document.getElementById('terms-toggle');
-    const termsDropdown = document.getElementById('terms-dropdown');
-    
-    if (termsToggle) {
-      termsToggle.addEventListener('click', (e) => {
-        e.preventDefault();
-        termsDropdown.style.display = termsDropdown.style.display === 'none' ? 'block' : 'none';
-      });
-    }
-    
-    // Close dropdown when clicking outside
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('#terms-dropdown') && !e.target.closest('#terms-toggle')) {
-        if (termsDropdown) termsDropdown.style.display = 'none';
+    // Mobile menu
+    new MobileMenu();
+
+    // Scroll animations
+    new ScrollAnimations();
+
+    // Property availability badges - using event delegation
+    document.addEventListener('mouseover', (e) => {
+      const badge = e.target.closest('.availability-badge');
+      if (badge) {
+        badge.style.transform = 'scale(1.05)';
+        badge.style.cursor = 'pointer';
       }
     });
 
-    // Basic call tracking
-    document.querySelectorAll('a[href^="tel:"]').forEach(link => {
-      link.addEventListener('click', () => {
-        console.log('Phone call initiated:', link.getAttribute('href'));
-      });
+    document.addEventListener('mouseout', (e) => {
+      const badge = e.target.closest('.availability-badge');
+      if (badge) {
+        badge.style.transform = 'scale(1)';
+      }
     });
-  </script>
+
+    document.addEventListener('click', (e) => {
+      const badge = e.target.closest('.availability-badge');
+      if (badge) {
+        window.location.href = 'tel:+15617186725';
+      }
+    });
+
+    // Terms & Privacy dropdown
+    if (elements.termsToggle && elements.termsDropdown) {
+      elements.termsToggle.addEventListener('click', (e) => {
+        e.preventDefault();
+        const isOpen = elements.termsDropdown.style.display === 'block';
+        elements.termsDropdown.style.display = isOpen ? 'none' : 'block';
+      });
+
+      // Close on outside click
+      document.addEventListener('click', (e) => {
+        if (!e.target.closest('#terms-dropdown') && !e.target.closest('#terms-toggle')) {
+          elements.termsDropdown.style.display = 'none';
+        }
+      });
+    }
+
+    // Ripple effect for buttons - using event delegation
+    document.addEventListener('click', (e) => {
+      const button = e.target.closest('.property-button, .nav-button');
+      if (!button) return;
+
+      const ripple = document.createElement('span');
+      const rect = button.getBoundingClientRect();
+      const size = Math.max(rect.width, rect.height);
+      const x = e.clientX - rect.left - size / 2;
+      const y = e.clientY - rect.top - size / 2;
+
+      ripple.style.cssText = `
+        width: ${size}px;
+        height: ${size}px;
+        left: ${x}px;
+        top: ${y}px;
+      `;
+      ripple.classList.add('ripple');
+      button.appendChild(ripple);
+      
+      setTimeout(() => ripple.remove(), 600);
+    });
+
+    // Performance monitoring
+    if ('performance' in window && window.performance.timing) {
+      window.addEventListener('load', () => {
+        setTimeout(() => {
+          const timing = window.performance.timing;
+          const loadTime = timing.loadEventEnd - timing.navigationStart;
+          console.log(`Page load time: ${loadTime}ms`);
+        }, 0);
+      });
+    }
+
+    // Call tracking
+    document.addEventListener('click', (e) => {
+      const tel = e.target.closest('a[href^="tel:"]');
+      if (tel) {
+        console.log('Phone call initiated:', tel.getAttribute('href'));
+        // You can add analytics tracking here
+      }
+    });
+  }
+
+  // Add subtle pulse animation CSS if not already present
+  const style = document.createElement('style');
+  style.textContent = `
+    @keyframes subtlePulse {
+      0%, 100% {
+        transform: scale(1);
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      }
+      50% {
+        transform: scale(1.05);
+        box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
+  // Initialize when DOM is ready
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', init);
+  } else {
+    init();
+  }
+})();
+</script>
 </body>
 </html>
