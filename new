@@ -1104,7 +1104,7 @@
       transform: translateY(-2px);
     }
 
-    //* --------- FLOATING CTA --------- */
+/* --------- FLOATING CTA --------- */
 .floating-cta {
   position: fixed;
   bottom: 20px;
@@ -1205,34 +1205,53 @@
 </a>
 
 
-  <!-- HEADER -->
+  <!-- OPTIMIZED HEADER -->
 <header>
     <nav class="container">
+        <!-- Logo Section -->
         <div class="logo">
-            <img src="logo.png" alt="Industrial Space" style="height: 55px; margin-right: 14px;">
+            <img src="logo.png" alt="Industrial Space" class="logo-img">
             <div class="logo-text">
                 <span class="logo-main">INDUSTRIAL<span>SPACE</span></span>
                 <span class="logo-tagline">Premium Commercial Properties</span>
             </div>
         </div>
+        
+        <!-- Desktop Navigation -->
         <div class="nav-links">
             <a href="#properties">Properties</a>
             <a href="#about">About</a>
             <a href="#faq">FAQ</a>
         </div>
+        
+        <!-- Desktop CTA -->
         <div class="nav-cta">
             <a href="tel:+15617186725" class="phone-number">
                 <span class="phone-icon-wrapper">📞</span>
                 <span class="phone-text">561-718-6725</span>
             </a>
-                            <a href="#hero-form" class="nav-button">Get Available Properties</a>
+            <a href="#hero-form" class="nav-button">Get Available Properties</a>
         </div>
-        <button class="mobile-menu-toggle">☰</button>
+        
+        <!-- Mobile CTA and Menu -->
+        <div class="mobile-actions">
+            <a href="tel:+15617186725" class="mobile-phone-btn">
+                <span class="phone-icon">📞</span>
+                <span class="phone-text-mobile">Call</span>
+            </a>
+            <button class="mobile-menu-toggle" aria-label="Menu">
+                <span class="hamburger">
+                    <span></span>
+                    <span></span>
+                    <span></span>
+                </span>
+            </button>
+        </div>
     </nav>
 </header>
 
 <style>
-/* Enhanced Header Styles - Add to your existing CSS */
+/* Optimized Header Styles */
 header {
     background: #ffffff;
     box-shadow: 0 2px 10px rgba(0,0,0,0.08);
@@ -1255,12 +1274,17 @@ nav {
     gap: 40px;
 }
 
-/* Enhanced Logo */
+/* Logo Styles */
 .logo {
     display: flex;
     align-items: center;
     flex-shrink: 0;
     gap: 0;
+}
+
+.logo-img {
+    height: 55px;
+    margin-right: 14px;
 }
 
 .logo-text {
@@ -1289,7 +1313,7 @@ nav {
     letter-spacing: 0.02em;
 }
 
-/* Enhanced Navigation Links */
+/* Navigation Links */
 .nav-links {
     display: flex;
     gap: 36px;
@@ -1325,7 +1349,7 @@ nav {
     width: 100%;
 }
 
-/* Enhanced CTA Section */
+/* CTA Section */
 .nav-cta {
     display: flex;
     align-items: center;
@@ -1333,7 +1357,7 @@ nav {
     flex-shrink: 0;
 }
 
-/* Premium Phone Number */
+/* Phone Number */
 .phone-number {
     display: flex;
     align-items: center;
@@ -1370,7 +1394,7 @@ nav {
     color: #10b981;
 }
 
-/* Premium CTA Button */
+/* CTA Button */
 .nav-button {
     background: #2563eb;
     color: white;
@@ -1408,28 +1432,16 @@ nav {
     box-shadow: 0 6px 20px rgba(37, 99, 235, 0.35);
 }
 
-/* Enhanced Mobile Menu */
-.mobile-menu-toggle {
+/* Mobile Actions - Hidden on Desktop */
+.mobile-actions {
     display: none;
-    background: white;
-    border: 2px solid #e5e7eb;
-    font-size: 1.5rem;
-    cursor: pointer;
-    padding: 8px 12px;
-    border-radius: 8px;
-    color: #1a1f36;
-    transition: all 0.2s;
 }
 
-.mobile-menu-toggle:hover {
-    background: #f3f4f6;
-    border-color: #d1d5db;
-}
-
-/* Responsive Design */
+/* Mobile Specific Styles */
 @media (max-width: 768px) {
     nav {
         height: 70px;
+        padding: 0 16px;
     }
 
     .logo {
@@ -1437,45 +1449,161 @@ nav {
     }
 
     .logo img {
-        height: 45px !important;
+        height: 40px !important;
+        margin-right: 10px;
+    }
+
+    .logo-main {
+        font-size: 1.25rem;
     }
 
     .logo-tagline {
         display: none;
     }
 
+    /* Hide desktop elements */
     .nav-links {
         display: none;
     }
 
-    .phone-number {
-        font-size: 1rem;
+    .nav-cta {
+        display: none;
     }
 
-    .phone-icon-wrapper {
-        width: 32px;
-        height: 32px;
-        font-size: 16px;
+    /* Show mobile elements */
+    .mobile-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
 
-    .nav-button {
-        padding: 12px 20px;
+    /* Mobile Phone Button */
+    .mobile-phone-btn {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        background: #10b981;
+        color: white;
+        padding: 10px 16px;
+        border-radius: 25px;
+        text-decoration: none;
+        font-weight: 700;
         font-size: 0.9375rem;
+        transition: all 0.3s;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
     }
 
+    .mobile-phone-btn:active {
+        transform: scale(0.98);
+    }
+
+    .phone-icon {
+        font-size: 18px;
+        animation: ring 4s ease-in-out infinite;
+    }
+
+    .phone-text-mobile {
+        display: inline;
+    }
+
+    /* Mobile Menu Toggle */
     .mobile-menu-toggle {
-        display: block;
+        width: 44px;
+        height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #f3f4f6;
+        border: none;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.3s;
+    }
+
+    .mobile-menu-toggle:active {
+        transform: scale(0.95);
+    }
+
+    .hamburger {
+        width: 22px;
+        height: 16px;
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .hamburger span {
+        width: 100%;
+        height: 2px;
+        background: #1a1f36;
+        border-radius: 2px;
+        transition: all 0.3s;
+        transform-origin: left;
+    }
+
+    .mobile-menu-toggle.active .hamburger span:nth-child(1) {
+        transform: rotate(45deg);
+        width: 24px;
+    }
+
+    .mobile-menu-toggle.active .hamburger span:nth-child(2) {
+        opacity: 0;
+        transform: translateX(-10px);
+    }
+
+    .mobile-menu-toggle.active .hamburger span:nth-child(3) {
+        transform: rotate(-45deg);
+        width: 24px;
     }
 }
 
 @media (max-width: 480px) {
-    .phone-text {
-        display: none;
+    .logo img {
+        height: 35px !important;
     }
 
-    .nav-button {
-        padding: 10px 16px;
+    .logo-main {
+        font-size: 1.125rem;
+    }
+
+    .mobile-phone-btn {
+        padding: 10px 14px;
         font-size: 0.875rem;
+    }
+
+    .phone-text-mobile {
+        display: none;
+    }
+}
+
+/* Very small screens */
+@media (max-width: 360px) {
+    nav {
+        padding: 0 12px;
+    }
+
+    .logo img {
+        height: 32px !important;
+        margin-right: 8px;
+    }
+
+    .logo-main {
+        font-size: 1rem;
+    }
+
+    .mobile-actions {
+        gap: 6px;
+    }
+
+    .mobile-phone-btn {
+        padding: 8px 12px;
+        font-size: 0.8125rem;
+    }
+
+    .mobile-menu-toggle {
+        width: 40px;
+        height: 40px;
     }
 }
 </style>
@@ -1489,30 +1617,6 @@ window.addEventListener('scroll', function() {
     } else {
         header.classList.remove('scrolled');
     }
-});
-
-// Smooth scroll for anchor links
-document.addEventListener('DOMContentLoaded', function() {
-    const links = document.querySelectorAll('a[href^="#"]');
-    
-    links.forEach(link => {
-        link.addEventListener('click', function(e) {
-            e.preventDefault();
-            
-            const targetId = this.getAttribute('href');
-            const targetElement = document.querySelector(targetId);
-            
-            if (targetElement) {
-                const headerHeight = document.querySelector('header').offsetHeight;
-                const targetPosition = targetElement.offsetTop - headerHeight - 20;
-                
-                window.scrollTo({
-                    top: targetPosition,
-                    behavior: 'smooth'
-                });
-            }
-        });
-    });
 });
 </script>
 
