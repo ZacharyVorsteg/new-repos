@@ -1235,10 +1235,7 @@
         
         <!-- Mobile CTA and Menu -->
         <div class="mobile-actions">
-            <a href="tel:+15617186725" class="mobile-phone-btn">
-                <span class="phone-icon">📞</span>
-                <span class="phone-text-mobile">Call</span>
-            </a>
+            
             <button class="mobile-menu-toggle" aria-label="Menu">
                 <span class="hamburger">
                     <span></span>
