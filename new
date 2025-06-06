@@ -3734,20 +3734,14 @@ This website is independently operated and not the official website of Cornersto
       });
     });
 
-    // Floating CTA hide/show on scroll
-    let lastScrollPos = 0;
-    const floatCTA = document.querySelector('.floating-cta');
-    window.addEventListener('scroll', () => {
-      const currentScroll = window.pageYOffset;
-      if(currentScroll > 300) {
-        if(currentScroll > lastScrollPos) {
-          floatCTA.style.transform = 'translateY(100px)';
-        } else {
-          floatCTA.style.transform = 'translateY(0)';
-        }
-      }
-      lastScrollPos = currentScroll;
-    });
+    // Floating CTA - always visible
+const floatCTA = document.querySelector('.floating-cta');
+window.addEventListener('scroll', () => {
+  // Keep the button visible at all times
+  if (floatCTA) {
+    floatCTA.style.transform = 'translateY(0)';
+  }
+});
 
     // FAQ Accordion
     const faqItems = document.querySelectorAll('.faq-item');
